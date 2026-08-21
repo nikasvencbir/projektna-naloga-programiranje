@@ -47,5 +47,29 @@ def prenesi_proizvodnjo(lat = 46.0569, lon = 14.5058, leto = 2025, moc_kw = 1.0)
         "outputformat": "json",
         "year": leto       
     }
+    print(f"[2/2] Prenašam podatke o sončnem obsevanju s PVGIS za lokacijo ({lat}, {lon})...")
+    odziv = requests.get(url, params=parametri, timeout=30)
+    if odziv.status_code != 200:
+        raise ConnectionError(f"Napaka pri prenosu PVGIS podatkov: koda {odziv.status_code}")
+
+    podatki = odziv.json()
+    urna_serija = podatki["outputs"]["hourly"]
+    
+    casi = []
+    moci_w = []
+    for vnos in urna_serija:
+        # Oblika časa v PVGIS: "20200101:0010"
+        casi.append(pd.to_datetime(vnos["time"], format="%Y%m%d:%H%M"))
+        moci_w.append(vnos["P"])  # Moč v W
+
+    df_pvgis = pd.DataFrame({
+        "Timestamp": casi,
+        "Proizvodnja_normirano": [p / 1000.0 for p in moci_w]  # Pretvornik v kWh za 1 kW SE
+    })
+
+    df_pvgis.to_csv(pot_datoteke, index=False)
+    print(f" -> PVGIS podatki uspešno shranjeni v: {pot_datoteke} (št. vrstic: {len(df_pvgis)})")
+    return df_pvgis
+
 if __name__ == "__main__":
     prenesi_spot_cene(leto=2025, drzava="SI")
