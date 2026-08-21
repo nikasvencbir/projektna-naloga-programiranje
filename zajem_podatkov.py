@@ -34,7 +34,7 @@ def prenesi_spot_cene(leto=2025, drzava="SI"):
     print(f" -> SPOT cene uspešno shranjene v: {pot_datoteke} (št. vrstic: {len(df_spot)})")
     return df_spot
 
-def prenesi_proizvodnjo(lat = 46.0569, lon = 14.5058, leto = 2025, moc_kw = 1.0):
+def prenesi_proizvodnjo(lat = 46.0569, lon = 14.5058, leto = 2020, moc_kw = 1.0):
     #privzete koordinate so LJ, jemljem iz API-ja PVGIS(Evropska komisija), vzamem normiran podatek
     os.makedirs(MAPA_PODATKI, exist_ok = True)
     pot_datoteke = os.path.join(MAPA_PODATKI, f"pvgis_proizvodnja_{lat}_{lon}.csv")
@@ -42,10 +42,13 @@ def prenesi_proizvodnjo(lat = 46.0569, lon = 14.5058, leto = 2025, moc_kw = 1.0)
     parametri = {
         "lat": lat,
         "lon": lon,
-        "peakpower": moc_kw,       # 1 kW za normirano bazično proizvodnjo
-        "loss": 14,                # Standardne sistemske izgube (%)
+        "peakpower": moc_kw,
+        "pvcalculation": 1,
+        "optimalangles": 1,
         "outputformat": "json",
-        "year": leto       
+        "startyear": leto,      
+        "endyear": leto,
+        "loss": 14       
     }
     print(f"[2/2] Prenašam podatke o sončnem obsevanju s PVGIS za lokacijo ({lat}, {lon})...")
     odziv = requests.get(url, params=parametri, timeout=30)
@@ -74,5 +77,5 @@ def prenesi_proizvodnjo(lat = 46.0569, lon = 14.5058, leto = 2025, moc_kw = 1.0)
 if __name__ == "__main__":
     print("=== ZAGON PRENOSA PODATKOV S SPLETA ===")
     prenesi_spot_cene(leto=2025, drzava="SI")
-    prenesi_proizvodnjo(lat=46.0569, lon=14.5058, leto=2025)
+    prenesi_proizvodnjo(lat=46.0569, lon=14.5058, leto=2020)
     print("=== PRENOS USPEŠNO ZAKLJUČEN ===")
