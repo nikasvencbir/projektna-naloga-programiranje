@@ -2,6 +2,7 @@
 import os
 import requests
 import json
+import pandas as pd
 
 #Določim pot do mape "podatki", ki sem jo ustvarila prej, sem se bojo shranjevali podatki iz spleta.
 MAPA_PODATKI = os.path.join(os.path.dirname(__file__),"podatki")
@@ -18,3 +19,17 @@ def prenesi_spot_cene(leto=2025, drzava="SI"):
         raise ConnectionError(f"Napaka pri prenosu SPOT cen: koda {odziv.status_code}")
 
     podatki = odziv.json()
+    casovni_zigi = pd.to_datatime(podatki["unix_seconds"], unit = "s")
+    cene = podatki ["price"]
+
+    df_spot = pd.DataFrame({
+        "Timestamp": casovni_zigi,
+        "SPOT_EUR_MWh": cene
+    })
+
+    #Filtrira za izbrano leto
+    df_spot = df_spot[df_spot["Timestamp"].dt.year == leto].copy()
+    #Shranim v CSV
+    df_spot.to_csv(pot_datoteke, index=False)
+    print(f" -> SPOT cene uspešno shranjene v: {pot_datoteke} (št. vrstic: {len(df_spot)})")
+    return df_spot
