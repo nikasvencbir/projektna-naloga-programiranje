@@ -6,7 +6,7 @@ import pandas as pd
 
 #Določim pot do mape "podatki", ki sem jo ustvarila prej, sem se bojo shranjevali podatki iz spleta.
 MAPA_PODATKI = os.path.join(os.path.dirname(__file__),"podatki")
-def prenesi_spot_cene(leto=2025, drzava="SI"): 
+def prenesi_spot_cene(leto=2024, drzava="SI"): 
     #prenese urne SPOT cene za Slovenijo v letu 2025
     os.makedirs(MAPA_PODATKI, exist_ok=True)
     pot_datoteke = os.path.join(MAPA_PODATKI, f"spot_cene_{drzava}_{leto}.csv")
@@ -76,6 +76,6 @@ def prenesi_proizvodnjo(lat = 46.0569, lon = 14.5058, leto = 2020, moc_kw = 1.0)
 
 if __name__ == "__main__":
     print("=== ZAGON PRENOSA PODATKOV S SPLETA ===")
-    prenesi_spot_cene(leto=2025, drzava="SI")
+    prenesi_spot_cene(leto=2024, drzava="SI")
     prenesi_proizvodnjo(lat=46.0569, lon=14.5058, leto=2020)
     print("=== PRENOS USPEŠNO ZAKLJUČEN ===")
