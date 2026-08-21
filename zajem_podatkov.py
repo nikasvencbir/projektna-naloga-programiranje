@@ -54,7 +54,7 @@ def prenesi_proizvodnjo(lat = 46.0569, lon = 14.5058, leto = 2025, moc_kw = 1.0)
 
     podatki = odziv.json()
     urna_serija = podatki["outputs"]["hourly"]
-    
+
     casi = []
     moci_w = []
     for vnos in urna_serija:
@@ -72,4 +72,7 @@ def prenesi_proizvodnjo(lat = 46.0569, lon = 14.5058, leto = 2025, moc_kw = 1.0)
     return df_pvgis
 
 if __name__ == "__main__":
+    print("=== ZAGON PRENOSA PODATKOV S SPLETA ===")
     prenesi_spot_cene(leto=2025, drzava="SI")
+    prenesi_proizvodnjo(lat=46.0569, lon=14.5058, leto=2025)
+    print("=== PRENOS USPEŠNO ZAKLJUČEN ===")
