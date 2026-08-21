@@ -33,5 +33,19 @@ def prenesi_spot_cene(leto=2025, drzava="SI"):
     df_spot.to_csv(pot_datoteke, index=False)
     print(f" -> SPOT cene uspešno shranjene v: {pot_datoteke} (št. vrstic: {len(df_spot)})")
     return df_spot
+
+def prenesi_proizvodnjo(lat = 46.0569, lon = 14.5058, leto = 2025, moc_kw = 1.0):
+    #privzete koordinate so LJ, jemljem iz API-ja PVGIS(Evropska komisija), vzamem normiran podatek
+    os.makedirs(MAPA_PODATKI, exist_ok = True)
+    pot_datoteke = os.path.join(MAPA_PODATKI, f"pvgis_proizvodnja_{lat}_{lon}.csv")
+    url = "https://re.jrc.ec.europa.eu/api/v5_2/seriescalc"
+    parametri = {
+        "lat": lat,
+        "lon": lon,
+        "peakpower": moc_kw,       # 1 kW za normirano bazično proizvodnjo
+        "loss": 14,                # Standardne sistemske izgube (%)
+        "outputformat": "json",
+        "year": leto       
+    }
 if __name__ == "__main__":
     prenesi_spot_cene(leto=2025, drzava="SI")
