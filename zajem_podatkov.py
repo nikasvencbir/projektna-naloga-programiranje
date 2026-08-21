@@ -9,7 +9,7 @@ MAPA_PODATKI = os.path.join(os.path.dirname(__file__),"podatki")
 def prenesi_spot_cene(leto=2024, drzava="SI"): 
     #prenese urne SPOT cene za Slovenijo v letu 2025
     os.makedirs(MAPA_PODATKI, exist_ok=True)
-    pot_datoteke = os.path.join(MAPA_PODATKI, f"spot_cene_{drzava}_{leto}.csv")
+    pot_datoteke = os.path.join(MAPA_PODATKI, f"spot_cene.csv")
 
     start = f"{leto}-01-01"
     end = f"{leto}-12-31"
@@ -37,7 +37,7 @@ def prenesi_spot_cene(leto=2024, drzava="SI"):
 def prenesi_proizvodnjo(lat = 46.0569, lon = 14.5058, leto = 2020, moc_kw = 1.0):
     #privzete koordinate so LJ, jemljem iz API-ja PVGIS(Evropska komisija), vzamem normiran podatek
     os.makedirs(MAPA_PODATKI, exist_ok = True)
-    pot_datoteke = os.path.join(MAPA_PODATKI, f"pvgis_proizvodnja_{lat}_{lon}.csv")
+    pot_datoteke = os.path.join(MAPA_PODATKI, f"pvgis_proizvodnja.csv")
     url = "https://re.jrc.ec.europa.eu/api/v5_2/seriescalc"
     parametri = {
         "lat": lat,
