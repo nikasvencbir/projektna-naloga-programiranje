@@ -76,7 +76,7 @@ def celotna_bilanca(row, p, s_base, stroski_df, spot_podatki, df_leto_ref, marza
     S_i = s_base * i_energija
     viski = np.maximum(S_i - p, 0)
     manjki = np.maximum(p - S_i, 0)
-    limit = limit_moci_kw / 4
+    limit = limit_moci_kw
     manjki_dejanski = np.minimum(manjki, limit)
     viski_dejanski = np.minimum(viski, limit)
 
@@ -131,7 +131,7 @@ st_ur = min(len(df_spot), len(df_pvgis), len(df_odjem))
 df_leto = pd.DataFrame({
     'Timestamp': df_spot['Timestamp'].iloc[:st_ur].values,
     'SPOT_EUR_MWh': df_spot['SPOT_EUR_MWh'].iloc[:st_ur].values,
-    'Proizvodnja_normirano': df_pvgis['Proizvodnja_normirano'].iloc[:st_ur].values,
+    'Proizvodnja_normirano': df_pvgis['Proizvodnja_normirano'].iloc[:st_ur].values / df_pvgis['Proizvodnja_normirano'].iloc[:st_ur].values.sum(),
     'Odjem_kWh': df_odjem['reg_A_plus'].iloc[:st_ur].values,
     'Tarifa (VT/MT)': df_odjem['Tarifa (VT/NT)'].iloc[:st_ur].values
 })
@@ -272,25 +272,26 @@ if __name__ == "__main__":
     plt.grid(True)
     plt.show()
 
-#excel tabela:
-# 1. Priprava podatkov za tabelo (izračunamo še stolpec Prihranek)
-df_koncna_tabela = pd.DataFrame(primerjava)
-
-# Prepričamo se, da so vrednosti številke
-df_koncna_tabela['Strošek pred'] = pd.to_numeric(df_koncna_tabela['Strošek pred'])
-df_koncna_tabela['Strošek po'] = pd.to_numeric(df_koncna_tabela['Strošek po'])
-
-# Izračunamo prihranek
-df_koncna_tabela['Prihranek'] = df_koncna_tabela['Strošek pred'] - df_koncna_tabela['Strošek po']
-
-
-# Ustvarimo kopijo za izvoz, da ne pokvarimo originalnih številk za izračune
-df_za_export = df_koncna_tabela.copy()
-for col in ['Strošek pred', 'Strošek po', 'Prihranek']:
-    df_za_export[col] = df_za_export[col].apply(formatiraj_eur)
-
-# 3. Izvoz v Excel
-ime_datoteke = f"Rezultati_Optimizacije_{najboljsa_edv['Moc_SE_kW']}kW.xlsx"
-df_za_export.to_excel(ime_datoteke, index=False)
-
-print(f"\n[USPEH] Rezultati so shranjeni v datoteko: {ime_datoteke}")
+    #excel tabela:
+    # 1. Priprava podatkov za tabelo (izračunamo še stolpec Prihranek)
+    df_koncna_tabela = pd.DataFrame(primerjava)
+    
+    # Prepričamo se, da so vrednosti številke
+    df_koncna_tabela['Strošek pred'] = pd.to_numeric(df_koncna_tabela['Strošek pred'])
+    df_koncna_tabela['Strošek po'] = pd.to_numeric(df_koncna_tabela['Strošek po'])
+    
+    # Izračunamo prihranek
+    df_koncna_tabela['Prihranek'] = df_koncna_tabela['Strošek pred'] - df_koncna_tabela['Strošek po']
+    
+    
+    # Ustvarimo kopijo za izvoz, da ne pokvarimo originalnih številk za izračune
+    df_za_export = df_koncna_tabela.copy()
+    for col in ['Strošek pred', 'Strošek po', 'Prihranek']:
+        df_za_export[col] = df_za_export[col].apply(formatiraj_eur)
+    
+    # 3. Izvoz v Excel
+    ime_datoteke = f"Rezultati_Optimizacije_{najboljsa_edv['Moc_SE_kW']}kW.xlsx"
+    df_za_export.to_excel(ime_datoteke, index=False)
+    
+    print(f"\n[USPEH] Rezultati so shranjeni v datoteko: {ime_datoteke}")
+    
