@@ -77,7 +77,7 @@ def celotna_bilanca(row, p, s_base, stroski_df, spot_podatki, df_leto_ref, marza
     viski = np.maximum(S_i - p, 0)
     manjki = np.maximum(p - S_i, 0)
     limit = limit_moci_kw
-    manjki_dejanski = np.minimum(manjki, limit)
+    manjki_dejanski = manjki
     viski_dejanski = np.minimum(viski, limit)
 
     
@@ -100,6 +100,33 @@ def celotna_bilanca(row, p, s_base, stroski_df, spot_podatki, df_leto_ref, marza
 # ==========================================
 # 2. PODATKI 
 # ==========================================
+#Uporabnik ima možnost, da podatke vnese sam ali uporabi moj model.
+#Vnos omejitve moči:
+vnos_moc = input("Vnesite priključno moč / omejitev odjema v kW [privzeta vrednost: 300]: ").strip()
+if vnos_moc == "":
+    limit_moci_kw = 300.0
+else:
+    try:
+        limit_moci_kw = float(vnos_moc.replace(',','.'))
+    except ValueError:
+        print("Vaš vnos ni veljaven. Uporabljam privzeto vrednost 300 kW.")
+print(f"Izbrana omejitev moči: {limit_moci_kw:.1f} kW")
+
+#Vnos lastne telemetrije:
+privzeta_datoteka = "Podatki_Optimizacija1.xlsx"
+vnos_datoteka = input(f"Vnesite ime Excel datoteke z meritvami (ali pritisnite Enter za '{privzeta_datoteka}'): ").strip()
+
+if vnos_datoteka == "":
+    pot_excel = os.path.join(os.path.dirname(__file__), privzeta_datoteka)
+else:
+    pot_excel = os.path.join(os.path.dirname(__file__), vnos_datoteka)
+
+if not os.path.exists(pot_excel):
+        print(f"OPOZORILO: Datoteka '{pot_excel}' ne obstaja! Uporabljena bo privzeta datoteka '{privzeta_datoteka}'.")
+        pot_excel = os.path.join(os.path.dirname(__file__), privzeta_datoteka)  
+
+print(f"Berem podatke iz: {os.path.basename(pot_excel)}")
+
 
 MAPA_PODATKI = os.path.join(os.path.dirname(__file__), "podatki")
 df_spot = pd.read_csv(os.path.join(MAPA_PODATKI, "spot_cene.csv"))
