@@ -1,17 +1,23 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
+import matplotlib.pyplot as plt
+import os
 
 # ==========================================
 # 1. FUNKCIJE 
 # ==========================================
-limit_moci_kw = 300
+limit_moci_kw = 300 #Ko boš konec z ostalim naredi da to uporabnik sam vnese
+#-----Pomožni funkciji
 def ocisti_ceno(tekst):
     if isinstance(tekst, str):
         stevilka_del = tekst.split(' ')[0]
         return float(stevilka_del.replace(',', '.'))
     return tekst
+# 2. Oblikovanje številk (€ in vejice)- za lepši Excel
+def formatiraj_eur(x):
+    return f"{x:,.2f} €".replace(',', 'X').replace('.', ',').replace('X', '.')
 
+#-------Funkcije, ki jih uporabljam v izračunu
 def izracunaj_f(i, p, s_base):
     S_i = s_base * i
     direktna_poraba = np.minimum(S_i, p)
@@ -95,21 +101,45 @@ def celotna_bilanca(row, p, s_base, stroski_df, spot_podatki, df_leto_ref, marza
 # 2. PODATKI 
 # ==========================================
 
-df = pd.read_excel('Odjem_proizvodnja_SPOT_tarifa1.xlsx')
-df2 = pd.read_excel('capex_se.xlsx')
-df3 = pd.read_excel('dodatni_podatki.xlsx')
-print("Stolpci v datoteki:", df.columns.tolist())
+MAPA_PODATKI = os.path.join(os.path.dirname(__file__), "podatki")
+df_spot = pd.read_csv(os.path.join(MAPA_PODATKI, "spot_cene.csv"))
+df_pvgis = pd.read_csv(os.path.join(MAPA_PODATKI, "pvgis_proizvodnja.csv"))
 
-df_leto = df[df['Year'] == 2026].copy()
-df_leto['Timestamp'] = pd.to_datetime(df_leto['Timestamp'])
+#Podatki iz mojih excelov(15-min meritve odjema, capex in tarife):
+ostali_podatki = os.path.join(os.path.dirname(__file__), "Podatki_Optimizacija1.xlsx")
+vsi_listi = pd.read_excel(ostali_podatki, sheet_name=None)
+df_odjem_15min = vsi_listi["Telemetrija"]
+df_capex = vsi_listi["Cenik_SE"]
+df_stroski = vsi_listi["Tarife"].copy().set_index('Postavka')
+df_stroski['Cena_num'] = df_stroski['Cena'].apply(ocisti_ceno)
+
+#15-min podatke pretvorim v urne
+df_odjem_15min['Timestamp'] = pd.to_datetime(df_odjem_15min['Timestamp'])
+df_odjem_15min = df_odjem_15min.set_index('Timestamp')
+df_odjem = df_odjem_15min.resample('1h').agg({
+    'reg_A_plus': 'sum',
+    'Tarifa (VT/NT)': 'first'
+}).reset_index()
+
+
+df_spot['Timestamp'] = pd.to_datetime(df_spot['Timestamp'])
+df_pvgis['Timestamp'] = pd.to_datetime(df_pvgis['Timestamp'])
+#varovalka, če bi izbrali kombinacijo let, ki nimajo isto dni
+st_ur = min(len(df_spot), len(df_pvgis), len(df_odjem))
+
+#združitev
+df_leto = pd.DataFrame({
+    'Timestamp': df_spot['Timestamp'].iloc[:st_ur].values,
+    'SPOT_EUR_MWh': df_spot['SPOT_EUR_MWh'].iloc[:st_ur].values,
+    'Proizvodnja_normirano': df_pvgis['Proizvodnja_normirano'].iloc[:st_ur].values,
+    'Odjem_kWh': df_odjem['reg_A_plus'].iloc[:st_ur].values,
+    'Tarifa (VT/MT)': df_odjem['Tarifa (VT/NT)'].iloc[:st_ur].values
+})
+#Vektorji za nadaljne računanje
 poraba = df_leto['Odjem_kWh'].values
 bazicna_proizvodnja = df_leto['Proizvodnja_normirano'].values
 SPOT_cena = df_leto['SPOT_EUR_MWh'].values
 tarifa = df_leto['Tarifa (VT/MT)'].values
-
-# Priprava df3
-df3_proc = df3.copy().set_index('Postavka')
-df3_proc['Cena_num'] = df3_proc['Cena'].apply(ocisti_ceno)
 
 # ==========================================
 # 3. IZVEDBA (Izračuni in grafi)
@@ -166,7 +196,7 @@ if __name__ == "__main__":
     print(f"Optimalna velikost naprave (SPOT): {optimalni_i_spot / 1050:.2f} kW")
 
     # 4. CAPEX + SPOT
-    scenariji = df2.copy()
+    scenariji = df_capex.copy()
     scenariji['Bilanca_EUR'] = scenariji.apply(lambda row: izracunaj_celotni_strosek(row, poraba, bazicna_proizvodnja, SPOT_cena), axis=1)
     najboljsa_opcija_capex = scenariji.loc[scenariji['Bilanca_EUR'].idxmax()]
     print("-" * 60)
@@ -181,13 +211,13 @@ if __name__ == "__main__":
     # 5. Celotna bilanca
     print("-" * 60)
     print("CILJ: NAJNIŽJI CELOTNI LETNI STROŠEK")
-    scenariji['Rezultat_dict'] = scenariji.apply(lambda row: celotna_bilanca(row, poraba, bazicna_proizvodnja, df3_proc, SPOT_cena, df_leto), axis=1)
+    scenariji['Rezultat_dict'] = scenariji.apply(lambda row: celotna_bilanca(row, poraba, bazicna_proizvodnja, df_stroski, SPOT_cena, df_leto), axis=1)
     scenariji['Strosek_EUR'] = scenariji['Rezultat_dict'].apply(lambda x: x['Skupaj'])
     
     # Izračun stanja BREZ SE
     omr_kwh_brez = np.where(df_leto['Tarifa (VT/MT)'] == "MT", 0.01695, 0.03724)
-    strosek_fiksni_brez = (df3_proc.loc['PowerNetworkFee','Cena_num'] * limit_moci_kw) + (df3_proc.loc['DutyMeteringPoint','Cena_num'] * 12)
-    var_strosek_brez = SPOT_cena/1000 + 5/1000 + omr_kwh_brez + df3_proc.loc['DutyOIEK','Cena_num'] + df3_proc.loc['DutyPiOI','Cena_num'] + df3_proc.loc['ExciseTax','Cena_num']
+    strosek_fiksni_brez = (df_stroski.loc['PowerNetworkFee','Cena_num'] * limit_moci_kw) + (df_stroski.loc['DutyMeteringPoint','Cena_num'] * 12)
+    var_strosek_brez = SPOT_cena/1000 + 5/1000 + omr_kwh_brez + df_stroski.loc['DutyOIEK','Cena_num'] + df_stroski.loc['DutyPiOI','Cena_num'] + df_stroski.loc['ExciseTax','Cena_num']
     strosek_brez_SE_full = (np.sum(poraba * var_strosek_brez) + strosek_fiksni_brez) * 1.13
     
     najboljsa_opcija_final = scenariji.loc[scenariji['Strosek_EUR'].idxmin()]
@@ -213,9 +243,9 @@ if __name__ == "__main__":
 
     # Tabela primerjave
     strosek_brez_spot = np.sum(poraba * (SPOT_cena/1000 + 5/1000)) * 1.13
-    strosek_brez_omr = (np.sum(poraba * omr_kwh_brez) + df3_proc.loc['PowerNetworkFee','Cena_num']* limit_moci_kw) * 1.13
-    strosek_brez_pris = (df3_proc.loc['DutyMeteringPoint','Cena_num']*12 + np.sum((df3_proc.loc['DutyOIEK','Cena_num']+df3_proc.loc['DutyPiOI','Cena_num'])*poraba)) * 1.13
-    strosek_brez_tros = np.sum(df3_proc.loc['ExciseTax','Cena_num'] * poraba) * 1.13
+    strosek_brez_omr = (np.sum(poraba * omr_kwh_brez) + df_stroski.loc['PowerNetworkFee','Cena_num']* limit_moci_kw) * 1.13
+    strosek_brez_pris = (df_stroski.loc['DutyMeteringPoint','Cena_num']*12 + np.sum((df_stroski.loc['DutyOIEK','Cena_num']+df_stroski.loc['DutyPiOI','Cena_num'])*poraba)) * 1.13
+    strosek_brez_tros = np.sum(df_stroski.loc['ExciseTax','Cena_num'] * poraba) * 1.13
     print("-" * 60)
     print("OPTIMALNA VELIKOST GLEDE NA EDV:")
     print(f"Optimalna velikost: {najboljsa_edv['Moc_SE_kW']} kW")
@@ -253,9 +283,6 @@ df_koncna_tabela['Strošek po'] = pd.to_numeric(df_koncna_tabela['Strošek po'])
 # Izračunamo prihranek
 df_koncna_tabela['Prihranek'] = df_koncna_tabela['Strošek pred'] - df_koncna_tabela['Strošek po']
 
-# 2. Oblikovanje številk (dodamo € in popravimo vejice za lepši izpis v Excelu)
-def formatiraj_eur(x):
-    return f"{x:,.2f} €".replace(',', 'X').replace('.', ',').replace('X', '.')
 
 # Ustvarimo kopijo za izvoz, da ne pokvarimo originalnih številk za izračune
 df_za_export = df_koncna_tabela.copy()
