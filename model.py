@@ -32,29 +32,6 @@ def izracunaj_f_ura(i, p, s_base):
     manjki = np.maximum(0, p - S_i)
     return np.sum(direktna_poraba) - np.sum(viski) - np.sum(manjki)
 
-def izracunaj_f_spot(i, p, s_base, spot_podatki, cena1=5, cena2=5):
-    S_i = s_base * i
-    viski = np.maximum(S_i - p, 0)
-    manjki = np.maximum(p - S_i, 0)
-    spot = spot_podatki / 1000
-    return np.sum((spot - cena1/1000) * viski) - np.sum((spot + cena2/1000) * manjki)
-
-def izracunaj_celotni_strosek(row, p, s_base, spot_podatki, cena_marza1=5, cena_marza2=5):
-    moc_kw = row['Moc_SE_kW']
-    capex_skupaj = row['CAPEX_EUR']
-    i = moc_kw * 1050
-    letni_strosek_capex = capex_skupaj / 30
-    S_i = s_base * i
-    viski = np.maximum(S_i - p, 0)
-    manjki = np.maximum(p - S_i, 0)
-    direktna_poraba = np.minimum(S_i, p)
-    marza1_kwh = cena_marza1 / 1000
-    marza2_kwh = cena_marza2 / 1000
-    spot_kwh = spot_podatki / 1000 
-    prihranek_energija = np.sum(direktna_poraba * spot_kwh)
-    zasluzek_viski = np.sum((spot_kwh - marza1_kwh) * viski)
-    strosek_manjki = np.sum((spot_kwh + marza2_kwh) * manjki)
-    return prihranek_energija + zasluzek_viski - strosek_manjki - letni_strosek_capex
 
 def celotna_bilanca(row, p, s_base, stroski_df, spot_podatki, df_leto_ref, marza1=5):
     df_omreznina1 = df_leto_ref['Tarifa (VT/MT)']
@@ -214,27 +191,7 @@ if __name__ == "__main__":
     plt.legend()
     plt.grid(True)
 
-    # 3. SPOT optimizacija
-    print("-" * 60)
-    print("CILJ: najnižji stroški - samo SPOT")
-    rezultati_spot = [izracunaj_f_spot(i, poraba, bazicna_proizvodnja, SPOT_cena) for i in velikosti]
-    optimalni_i_spot = velikosti[np.argmax(rezultati_spot)]
-    print(f"Optimalna letna količna (SPOT): {optimalni_i_spot:.2f} kWh")
-    print(f"Optimalna velikost naprave (SPOT): {optimalni_i_spot / 1050:.2f} kW")
-
-    # 4. CAPEX + SPOT
     scenariji = df_capex.copy()
-    scenariji['Bilanca_EUR'] = scenariji.apply(lambda row: izracunaj_celotni_strosek(row, poraba, bazicna_proizvodnja, SPOT_cena), axis=1)
-    najboljsa_opcija_capex = scenariji.loc[scenariji['Bilanca_EUR'].idxmax()]
-    print("-" * 60)
-    print(" CILJ: najnižji stroški SPOT + CAPEX ")
-    print(f"Najboljša moč elektrarne: {najboljsa_opcija_capex['Moc_SE_kW']} kW")
-    print(f"Letna bilanca: {najboljsa_opcija_capex['Bilanca_EUR']:.2f} €")
-    
-    strosek_brez_SE_osnovni = np.sum(poraba * (SPOT_cena/1000 + 5/1000))
-    print(f"Strošek BREZ sončne elektrarne: -{strosek_brez_SE_osnovni:.2f} €")
-    print(f"Z elektrarno prihraniš: {najboljsa_opcija_capex['Bilanca_EUR'] + strosek_brez_SE_osnovni:.2f} € na leto")
-
     # 5. Celotna bilanca
     print("-" * 60)
     print("CILJ: NAJNIŽJI CELOTNI LETNI STROŠEK")
