@@ -7,7 +7,7 @@ Projektna naloga pri predmetu Uvod v programiranje / Programiranje.
 Cilj naloge je, da za poljubnega odjemalca električne energije, ki se zanima za nakup sončne elektrarne (brez baterije) izbere najbolj optimalno velikost. Kot najbolj optimalno velikost razumemo tisto, katere investicija se najprej povrne, torej ima najnižji EDV.
 
 Model upošteva:
-- **Meritve porabe:** 15-minutno telemetrijo dejanskega odjema, agregirano na urno raven. Če želite preizkusiti program na vašem dojemu lahko te podatke pridobite od vašega oskrbovalca z električno energijo.
+- **Meritve porabe:** 15-minutno telemetrijo dejanskega odjema, agregirano na urno raven. Če želite preizkusiti program na vašem odjemu, lahko te podatke pridobite od vašega oskrbovalca z električno energijo.
 - **Borzne cene:** urne SPOT cene električne energije v Sloveniji za leto 2024.
 - **Sončno obsevanje:** simulacijo urne proizvodnje sončne elektrarne prek evropskega modela PVGIS glede na izbrane koordinate.
 - **Tarifni sistem:** omrežnino (VT/MT), dajatve (OIE+SPTE, prispevek za delovanje operaterja trga), trošarino in investicijske stroške (CAPEX),
