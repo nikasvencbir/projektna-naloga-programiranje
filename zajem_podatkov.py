@@ -34,7 +34,7 @@ def prenesi_spot_cene(leto=2024, drzava="SI"):
     print(f" -> SPOT cene uspešno shranjene v: {pot_datoteke} (št. vrstic: {len(df_spot)})")
     return df_spot
 
-def prenesi_proizvodnjo(lat = 46.0569, lon = 14.5058, leto = 2020, moc_kw = 1.0):
+def prenesi_proizvodnjo(lat, lon, leto = 2020, moc_kw = 1.0):
     #privzete koordinate so LJ, jemljem iz API-ja PVGIS(Evropska komisija), vzamem normiran podatek
     os.makedirs(MAPA_PODATKI, exist_ok = True)
     pot_datoteke = os.path.join(MAPA_PODATKI, f"pvgis_proizvodnja.csv")
@@ -74,8 +74,27 @@ def prenesi_proizvodnjo(lat = 46.0569, lon = 14.5058, leto = 2020, moc_kw = 1.0)
     print(f" -> PVGIS podatki uspešno shranjeni v: {pot_datoteke} (št. vrstic: {len(df_pvgis)})")
     return df_pvgis
 
+#Vnos željene lokacije
+vnos_lat = input(f"Vnesite zemljepisno širino, kjer bo postavljena SE (ali pritisnite Enter za Ljubljana): ").strip()
+if vnos_lat == "":
+     lat = 46.0569
+else:
+    try:
+        lat = float(vnos_lat.replace(',','.'))
+    except ValueError:
+        print("Vaš vnos ni veljaven. Uporabljam privzeto vrednost (Ljubljana).")
+vnos_lon = input(f"Vnesite zemljepisno dolžino, kjer bo postavljena SE (ali pritisnite Enter za Ljubljana): ").strip()
+if vnos_lon == "":
+     lon = 14.5058
+else:
+    try:
+        lon = float(vnos_lon.replace(',','.'))
+    except ValueError:
+        print("Vaš vnos ni veljaven. Uporabljam privzeto vrednost (Ljubljana).")
+print(f"Izbrana lokacija za SE: širina = {lat:.4f}, dolžina = {lon:.4f}")
+
 if __name__ == "__main__":
     print("=== ZAGON PRENOSA PODATKOV S SPLETA ===")
     prenesi_spot_cene(leto=2024, drzava="SI")
-    prenesi_proizvodnjo(lat=46.0569, lon=14.5058, leto=2020)
+    prenesi_proizvodnjo(lat, lon, leto=2020)
     print("=== PRENOS USPEŠNO ZAKLJUČEN ===")
