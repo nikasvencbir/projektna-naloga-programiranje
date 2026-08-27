@@ -1,7 +1,6 @@
 """Modul za prenos podatkov o borznih cenah elektrike in sončnem obsevanju."""
 import os
 import requests
-import json
 import pandas as pd
 
 #Določim pot do mape "podatki", ki sem jo ustvarila prej, sem se bojo shranjevali podatki iz spleta.
@@ -74,26 +73,25 @@ def prenesi_proizvodnjo(lat, lon, leto = 2020, moc_kw = 1.0):
     print(f" -> PVGIS podatki uspešno shranjeni v: {pot_datoteke} (št. vrstic: {len(df_pvgis)})")
     return df_pvgis
 
-#Vnos željene lokacije
-vnos_lat = input(f"Vnesite zemljepisno širino, kjer bo postavljena SE (ali pritisnite Enter za Ljubljana): ").strip()
-if vnos_lat == "":
-     lat = 46.0569
-else:
-    try:
-        lat = float(vnos_lat.replace(',','.'))
-    except ValueError:
-        print("Vaš vnos ni veljaven. Uporabljam privzeto vrednost (Ljubljana).")
-vnos_lon = input(f"Vnesite zemljepisno dolžino, kjer bo postavljena SE (ali pritisnite Enter za Ljubljana): ").strip()
-if vnos_lon == "":
-     lon = 14.5058
-else:
-    try:
-        lon = float(vnos_lon.replace(',','.'))
-    except ValueError:
-        print("Vaš vnos ni veljaven. Uporabljam privzeto vrednost (Ljubljana).")
-print(f"Izbrana lokacija za SE: širina = {lat:.4f}, dolžina = {lon:.4f}")
-
 if __name__ == "__main__":
+    vnos_lat = input(f"Vnesite zemljepisno širino, kjer bo postavljena SE (ali pritisnite Enter za Ljubljana): ").strip()
+    if vnos_lat == "":
+        lat = 46.0569
+    else:
+        try:
+            lat = float(vnos_lat.replace(',','.'))
+        except ValueError:
+            print("Vaš vnos ni veljaven. Uporabljam privzeto vrednost (Ljubljana).")
+    vnos_lon = input(f"Vnesite zemljepisno dolžino, kjer bo postavljena SE (ali pritisnite Enter za Ljubljana): ").strip()
+    if vnos_lon == "":
+        lon = 14.5058
+    else:
+        try:
+            lon = float(vnos_lon.replace(',','.'))
+        except ValueError:
+            print("Vaš vnos ni veljaven. Uporabljam privzeto vrednost (Ljubljana).")
+    print(f"Izbrana lokacija za SE: širina = {lat:.4f}, dolžina = {lon:.4f}")
+
     print("=== ZAGON PRENOSA PODATKOV S SPLETA ===")
     prenesi_spot_cene(leto=2024, drzava="SI")
     prenesi_proizvodnjo(lat, lon, leto=2020)

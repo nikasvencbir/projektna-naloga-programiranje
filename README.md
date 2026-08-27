@@ -25,6 +25,31 @@ Model upošteva:
   [Borzen – operater trga z elektriko (borzen.si)](https://www.borzen.si/) in [Uradni list RS (uradni-list.si)](https://www.uradni-list.si/) – *Uredba o določitvi prispevka za spodbujanje soproizvodnje in OIE*.
 - **Trošarina na električno energijo (`ExciseTax`):**  
   [Finančna uprava Republike Slovenije - FURS (fu.gov.si)](https://www.fu.gov.si/) – *Zakon o trošarinah*.
+
+## Namestitev in potrebne knjižnice
+
+Projekt je napisan v programskem jeziku **Python 3**. Za delovanje so potrebne naslednje zunanje knjižnice:
+
+* `requests` – za pošiljanje API zahtev in prenos podatkov s spleta,
+* `pandas` – za obdelavo podatkovnih okvirjev in časovnih vrst,
+* `numpy` – za numerične izračune,
+* `matplotlib` – za izris grafov in vizualizacijo rezultatov,
+* `openpyxl` – za branje vhodnih Excelovih preglednic.
+
+### Namestitev knjižnic
+Pred zagonom namestite vse potrebne knjižnice z enim ukazom v terminalu:
+
+```bash
+pip install requests pandas numpy matplotlib openpyxl
+```
+## Navodila za zagon projekta
+Zagon interaktivnega zvezka:
+-Odprite okolje Jupyter Notebook ali VS Code.
+-Odprite datoteko analiza.ipynb.
+-V meniju izberite Kernel 
+$\rightarrow$ Restart & Run All (ali zaporedoma zaženite vse celice).
+V zvezku se bodo izvedli prenosi podatkov, simulacija, optimizacija ter izrisali končni grafi dobe vračanja.
+
 ## Struktura repozitorija
 
 ```text
@@ -32,8 +57,9 @@ Model upošteva:
 │   ├── spot_cene.csv               # Zajem borznih SPOT cen
 │   └── pvgis_proizvodnja.csv       # Zajem urne proizvodnje iz PVGIS
 ├── Podatki_Optimizacija1.xlsx      # Vhodni Excel s telemetrijo in ceniki
-├── prenos_podatkov.py              # Skripta za prenos podatkov prek API-jev
+├── zajem_podatkov.py              # Skripta za prenos podatkov prek API-jev
 ├── analiza.ipynb                   # Glavni Jupyter Notebook s celotno analizo in grafi
-├── uporaba-ui.md                   # Dokumentacija uporabe orodij umetne inteligence
+├── uporaba_ui.md                   # Dokumentacija uporabe orodij umetne inteligence
 ├── .gitignore                      # Izločitev odvečnih datotek (__pycache__, *.pyc, itd.)
 └── README.md                       # Opis projekta in navodila za uporabo
+
