@@ -1,8 +1,5 @@
 import numpy as np
 
-limit_moci_kw = 300
-
-
 def ocisti_ceno(tekst):
     if isinstance(tekst, str):
         stevilka_del = tekst.split(' ')[0]
