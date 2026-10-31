@@ -11,7 +11,7 @@ def formatiraj_eur(x): #X je zato da nimam hkrati samih pik oz samih vejic
     return f"{x:,.2f} €".replace(',', 'X').replace('.', ',').replace('X', '.')
 
 
-def izracunaj_f(i, p, s_base):
+def izracunaj_f(i, p, s_base): #ta samo pogleda katera sončna elektrarna najbolj pokrije porabo in ima najmanj viškov in manjkov
     S_i = s_base * i #proizvodnja
     direktna_poraba = np.minimum(S_i, p)
     viski = np.maximum(S_i - p, 0)
