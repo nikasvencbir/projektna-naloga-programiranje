@@ -30,17 +30,17 @@ Model upošteva:
 
 Projekt je napisan v programskem jeziku **Python 3**. Za delovanje so potrebne naslednje zunanje knjižnice:
 
+* `os` – za določanje in združevanje poti do map in datotek ter za samodejno ustvarjanje ciljne mape za shranjevanje podatkov
 * `requests` – za pošiljanje API zahtev in prenos podatkov s spleta,
 * `pandas` – za obdelavo podatkovnih okvirjev in časovnih vrst,
 * `numpy` – za numerične izračune,
 * `matplotlib` – za izris grafov in vizualizacijo rezultatov,
-* `openpyxl` – za branje vhodnih Excelovih preglednic.
 
 ### Namestitev knjižnic
 Pred zagonom namestite vse potrebne knjižnice z enim ukazom v terminalu:
 
 ```bash
-pip install requests pandas numpy matplotlib openpyxl
+pip install requests pandas numpy matplotlib os
 ```
 ## Navodila za zagon projekta
 Zagon interaktivnega zvezka:
@@ -49,6 +49,36 @@ Zagon interaktivnega zvezka:
 -V meniju izberite Kernel 
 $\rightarrow$ Restart & Run All (ali zaporedoma zaženite vse celice).
 V zvezku se bodo izvedli prenosi podatkov, simulacija, optimizacija ter izrisali končni grafi dobe vračanja.
+
+Če želite uporabiti svojo telemetrijo se držite spodaj opisane oblike datoteke:
+## Navodila za pripravo podatkov (Uporabniške meritve)
+
+Za izvedbo simulacije in optimizacije sončne elektrarne uporabite priloženo predlogo Excel datoteke. 
+
+Delovna lista **`Tarife`** in **`Cenik_SE`** iz datoteke **`Podatki_Optimizacija.xlsx`** sta že vnaprej izpolnjena s privzetimi ekonomskimi parametri in cenikom investicije — **teh dveh listov ne spreminjajte ali brišite**, saj ju program potrebuje za pravilen izračun stroškov in dobe vračanja.
+
+Vaša naloga je le, da v ustrezen delovni list vnesete svoje časovne meritve porabe ali ustvarite novo datoteko tako, da zgoraj omenjena delovna lista enostavno kopirate.
+
+---
+
+### 1. Splošna pravila
+* **Format:** Microsoft Excel (`.xlsx`).
+* **Vnaprej nastavljeni listi:** Listov `Tarife` in `Cenik_SE` ter njunih obstoječih stolpcev ne preimenujte.
+* **Časovni korak:** Podatki meritev morajo biti v enotnem časovnem intervalu (15-minutni) in kronološko urejeni.
+* **Numerične vrednosti:** V celicah s podatki naj bodo izključno številke (brez enot, kot so `kWh`, `kW` ipd.).
+
+---
+
+### 2. Vnos meritev (Delovni list za meritve)
+
+V list z meritvami vnesite časovno vrsto za obravnavano obdobje (celotno koledarsko leto).
+
+* **Zahtevana struktura stolpcev:**
+  | Stolpec | Opis | Primer |
+  | :--- | :--- | :--- |
+  | `Timestamp` | Časovni žig meritve (datum in ura) | `2024-01-01 00:00:00` |
+  | `Poraba` | Dejanski odjem/poraba objekta v danem intervalu | `12.4` |
+  | `Proizvodnja` | Normirana / referenčna proizvodnja SE za skaliranje | `0.0` |
 
 ## Struktura repozitorija
 

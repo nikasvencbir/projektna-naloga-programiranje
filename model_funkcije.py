@@ -1,31 +1,22 @@
-import numpy as np
+import numpy as np 
 
-def ocisti_ceno(tekst):
+def ocisti_ceno(tekst): #iz niza v float
     if isinstance(tekst, str):
-        stevilka_del = tekst.split(' ')[0]
+        stevilka_del = tekst.split(' ')[0] #vzame samo prvi del niza
         return float(stevilka_del.replace(',', '.'))
     return tekst
 
 
-def formatiraj_eur(x):
+def formatiraj_eur(x): #X je zato da nimam hkrati samih pik oz samih vejic
     return f"{x:,.2f} €".replace(',', 'X').replace('.', ',').replace('X', '.')
 
 
 def izracunaj_f(i, p, s_base):
-    S_i = s_base * i
+    S_i = s_base * i #proizvodnja
     direktna_poraba = np.minimum(S_i, p)
     viski = np.maximum(S_i - p, 0)
     manjki = np.maximum(p - S_i, 0)
     return np.sum(direktna_poraba) - np.sum(viski) - np.sum(manjki)
-
-
-def izracunaj_f_ura(i, p, s_base):
-    S_i = s_base * i
-    direktna_poraba = np.minimum(S_i, p)
-    viski = np.maximum(0, S_i - p)
-    manjki = np.maximum(0, p - S_i)
-    return np.sum(direktna_poraba) - np.sum(viski) - np.sum(manjki)
-
 
 def celotna_bilanca(
     row,
