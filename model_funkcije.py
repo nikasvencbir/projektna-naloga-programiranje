@@ -28,8 +28,8 @@ def celotna_bilanca(
     marza1=5,
     limit_moci_kw=300
 ):
-    df_omreznina1 = df_leto_ref['Tarifa (VT/MT)']
-    df_omreznina2 = stroski_df.loc['PowerNetworkFee', 'Cena_num']
+    df_omreznina1 = df_leto_ref['Tarifa (VT/NT)'] #rabim cel stolpec
+    df_omreznina2 = stroski_df.loc['PowerNetworkFee', 'Cena_num'] #rabim določeno celico
     df_meritve = stroski_df.loc['DutyMeteringPoint', 'Cena_num']
     df_OIEK = stroski_df.loc['DutyOIEK', 'Cena_num']
     df_PiOI = stroski_df.loc['DutyPiOI', 'Cena_num']
@@ -37,20 +37,20 @@ def celotna_bilanca(
 
     spot_kwh = spot_podatki / 1000
     marza1_kwh = marza1 / 1000
-    omreznina_kwh = np.where(df_omreznina1 == "MT", 0.01695, 0.03724)
-    moc_kw = row['Moc_SE_kW']
+    omreznina_kwh = np.where(df_omreznina1 == "NT", 0.01695, 0.03724)
+    moc_kw = row['Moc_SE_kW'] #vzamemo moč elektrarne v vrstici(row)
     capex_skupaj = row['CAPEX_EUR']
-    letni_strosek_capex = capex_skupaj / 30
+    letni_strosek_capex = capex_skupaj / 30 #30 letna amortizacija
     i_energija = moc_kw * 1050
     S_i = s_base * i_energija
 
     viski = np.maximum(S_i - p, 0)
     manjki = np.maximum(p - S_i, 0)
 
-    manjki_dejanski = manjki
+
     viski_dejanski = np.minimum(viski, limit_moci_kw)
     variabilni_strosek_kwh = spot_kwh + marza1_kwh + omreznina_kwh + df_OIEK + df_PiOI + df_trosarina
-    strosek_nakupa = np.sum(manjki_dejanski * variabilni_strosek_kwh)
+    strosek_nakupa = np.sum(manjki * variabilni_strosek_kwh)
     strosek_fiksni = (df_omreznina2 * limit_moci_kw) + (df_meritve * 12)
     zasluzek_viski = np.sum((spot_kwh - marza1_kwh) * viski_dejanski)
     skupni_letni_strosek = (strosek_fiksni + letni_strosek_capex + strosek_nakupa - zasluzek_viski) * 1.13
