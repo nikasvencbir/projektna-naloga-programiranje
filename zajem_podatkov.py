@@ -1,78 +1,77 @@
 """Modul za prenos podatkov o borznih cenah elektrike in sončnem obsevanju."""
-import os
-import requests
-import pandas as pd
 
-#Določim pot do mape "podatki", ki sem jo ustvarila prej, sem se bojo shranjevali podatki iz spleta.
-#__file__ je vgrajena Pythonova spremenljivka, ki hrani pot do trenutne datoteke (skripte), v kateri se ta koda izvaja.
+import os
+import re
+import pandas as pd
+import requests
+
+# Določim pot do mape "podatki", ki sem jo ustvarila prej, sem se bojo shranjevali podatki iz spleta.
+# __file__ je vgrajena Pythonova spremenljivka, ki hrani pot do trenutne datoteke (skripte), v kateri se ta koda izvaja.
 # os.path.dirname- shrani pot do datoteke brez imena datoteke(mape)
-MAPA_PODATKI = os.path.join(os.path.dirname(__file__),"podatki") #nastavi pot do nove mape(je še ne ustvari)
-def prenesi_spot_cene(leto=2025, drzava="SI"): 
-    #prenese urne SPOT cene za Slovenijo v letu 2025
-    os.makedirs(MAPA_PODATKI, exist_ok=True) #make directories, ustvari mapo
-    pot_datoteke = os.path.join(MAPA_PODATKI, f"spot_cene.csv") #nastavi pot+ime
+MAPA_PODATKI = os.path.join(
+    os.path.dirname(__file__), "podatki"
+)  # nastavi pot do nove mape(je še ne ustvari)
+
+
+def prenesi_spot_cene(leto=2025, drzava="SI"):
+    # prenese urne SPOT cene za Slovenijo v letu 2025
+    os.makedirs(MAPA_PODATKI, exist_ok=True)  # make directories, ustvari mapo
+    pot_datoteke = os.path.join(MAPA_PODATKI, f"spot_cene.csv")  # nastavi pot+ime
 
     start = f"{leto}-01-01"
     end = f"{leto}-12-31"
     url = f"https://api.energy-charts.info/price?bzn={drzava}&start={start}&end={end}"
     print(f"Prenašam SPOT cene za državo {drzava} za leto {leto}...")
-    #Sporoči morebitno napako
+    # Sporoči morebitno napako
     odziv = requests.get(url, timeout=30)
-    if odziv.status_code != 200: # 200-OK, 404-ne najde, 500-sesul se je streznik
-        raise ConnectionError(f"Napaka pri prenosu SPOT cen: koda {odziv.status_code}")
+    if odziv.status_code != 200:  # 200-OK, 404-ne najde, 500-sesul se je streznik
+        raise ConnectionError(
+            f"Napaka pri prenosu SPOT cen: koda {odziv.status_code}"
+        )
 
-    podatki = odziv.json() #pretvori v pythonov slovar iz surovega teksta
-    casovni_zigi = pd.to_datetime(podatki["unix_seconds"], unit = "s") #iz unix časa(št sekund od 1970) da v berljiv datum
-    cene = podatki ["price"]
+    podatki = odziv.json()  # pretvori v pythonov slovar iz surovega teksta
+    casovni_zigi = pd.to_datetime(
+        podatki["unix_seconds"], unit="s"
+    )  # iz unix časa(št sekund od 1970) da v berljiv datum
+    cene = podatki["price"]
 
-    df_spot = pd.DataFrame({
-        "Timestamp": casovni_zigi,
-        "SPOT_EUR_MWh": cene
-    })
+    df_spot = pd.DataFrame({"Timestamp": casovni_zigi, "SPOT_EUR_MWh": cene})
 
-    #Shranim v CSV
+    # Shranim v CSV
     df_spot.to_csv(pot_datoteke, index=False)
-    print(f" -> SPOT cene uspešno shranjene v: {pot_datoteke} (št. vrstic: {len(df_spot)})")
+    print(
+        f" -> SPOT cene uspešno shranjene v: {pot_datoteke} (št. vrstic: {len(df_spot)})"
+    )
     return df_spot
 
-def prenesi_proizvodnjo(lat, lon, leto = 2020, moc_kw = 1.0):
-    #privzete koordinate so LJ, jemljem iz API-ja PVGIS(Evropska komisija), vzamem normiran podatek
-    os.makedirs(MAPA_PODATKI, exist_ok = True)
+
+def prenesi_proizvodnjo(lat, lon, leto=2020, moc_kw=1.0):
+    # privzete koordinate so LJ, jemljem iz API-ja PVGIS(Evropska komisija), vzamem normiran podatek
+    os.makedirs(MAPA_PODATKI, exist_ok=True)
     pot_datoteke = os.path.join(MAPA_PODATKI, f"pvgis_proizvodnja.csv")
     url = "https://re.jrc.ec.europa.eu/api/v5_2/seriescalc"
     parametri = {
         "lat": lat,
         "lon": lon,
-        "peakpower": moc_kw, #nastavljena je na 1, da lahko delam z normiranim profilom
-        "pvcalculation": 1, # da ne vrne samo obsevanosti ampak tudi izkoristek
-        "optimalangles": 1, #idealni nagib se bo izračunal sam
-        "outputformat": "json", #najboljši način za python
-        "startyear": leto,      
+        "peakpower": moc_kw,  # nastavljena je na 1, da lahko delam z normiranim profilom
+        "pvcalculation": 1,  # da ne vrne samo obsevanosti ampak tudi izkoristek
+        "optimalangles": 1,  # idealni nagib se bo izračunal sam
+        "outputformat": "json",  # najboljši način za python
+        "startyear": leto,
         "endyear": leto,
-        "loss": 14  #standardna privzeta vrednost v SLO     
+        "loss": 14,  # standardna privzeta vrednost v SLO
     }
-    print(f"[2/2] Prenašam podatke o sončnem obsevanju s PVGIS za lokacijo ({lat}, {lon})...")
+    print(
+        f"[2/2] Prenašam podatke o sončnem obsevanju s PVGIS za lokacijo ({lat}, {lon})..."
+    )
     odziv = requests.get(url, params=parametri, timeout=30)
     if odziv.status_code != 200:
-        raise ConnectionError(f"Napaka pri prenosu PVGIS podatkov: koda {odziv.status_code}")
+        raise ConnectionError(
+            f"Napaka pri prenosu PVGIS podatkov: koda {odziv.status_code}"
+        )
 
     podatki = odziv.json()
     urna_serija = podatki["outputs"]["hourly"]
-#    {
-#  "inputs": {
-#    "location": { "latitude": 46.0569, "longitude": 14.5058 },
-#    "pv_module": { "peak_power": 1.0 }
-#  },
-#  "outputs": { <-----najprej določim naj to pogleda
-#    "totals": { ... },
-#    "hourly": [ <------potem določim naj to vzame za nov seznam, da dobim enostaven pythonov seznam z malomi slovarčki
-#      {"time": "20200101:0010", "P": 0.0, "G(i)": 0.0},
-#      {"time": "20200101:0110", "P": 0.0, "G(i)": 0.0},
-#      ...
-#      {"time": "20200101:1210", "P": 650.4, "G(i)": 710.2}
-#    ]
-#  }
-#}
 
     casi = []
     moci_w = []
@@ -83,10 +82,50 @@ def prenesi_proizvodnjo(lat, lon, leto = 2020, moc_kw = 1.0):
 
     df_pvgis = pd.DataFrame({
         "Timestamp": casi,
-        "Proizvodnja_normirano": [p / 1000.0 for p in moci_w]  # Pretvornik v kWh za 1 kW SE
+        "Proizvodnja_normirano": [
+            p / 1000.0 for p in moci_w
+        ],  # Pretvornik v kWh za 1 kW SE
     })
 
     df_pvgis.to_csv(pot_datoteke, index=False)
-    print(f" -> PVGIS podatki uspešno shranjeni v: {pot_datoteke} (št. vrstic: {len(df_pvgis)})")
+    print(
+        f" -> PVGIS podatki uspešno shranjeni v: {pot_datoteke} (št. vrstic: {len(df_pvgis)})"
+    )
     return df_pvgis
 
+
+# Tvoja koda za lokacijo, zapakirana v funkcijo:
+def doloci_lokacijo(vnos_lat=None, vnos_lon=None):
+    # Če vrednost ni podana, je privzeta Ljubljana
+    if vnos_lat is None or str(vnos_lat).strip() == "":
+        lat = 46.0569
+    else:
+        try:
+            lat = float(str(vnos_lat).replace(",", "."))
+        except ValueError:
+            print(
+                "Vaš vnos ni veljaven. Uporabljam privzeto vrednost (Ljubljana)."
+            )
+            lat = 46.0569
+
+    if vnos_lon is None or str(vnos_lon).strip() == "":
+        lon = 14.5058
+    else:
+        try:
+            lon = float(str(vnos_lon).replace(",", "."))
+        except ValueError:
+            print(
+                "Vaš vnos ni veljaven. Uporabljam privzeto vrednost (Ljubljana)."
+            )
+            lon = 14.5058
+
+    print(f"Izbrana lokacija za SE: širina = {lat:.4f}, dolžina = {lon:.4f}")
+    return lat, lon
+
+
+# Tvoja funkcija zazeni_prenos, ki je prej manjkala:
+def zazeni_prenos(lat, lon, leto_cene=2024, leto_proizvodnja=2020):
+    print("=== ZAGON PRENOSA PODATKOV S SPLETA ===")
+    prenesi_spot_cene(leto=leto_cene, drzava="SI")
+    prenesi_proizvodnjo(lat, lon, leto=leto_proizvodnja)
+    print("=== PRENOS USPEŠNO ZAKLJUČEN ===")
