@@ -90,26 +90,3 @@ def prenesi_proizvodnjo(lat, lon, leto = 2020, moc_kw = 1.0):
     print(f" -> PVGIS podatki uspešno shranjeni v: {pot_datoteke} (št. vrstic: {len(df_pvgis)})")
     return df_pvgis
 
-#if __name__ == "__main__": #da se ne izvaja če datoteko samo importam kam drugam
-    vnos_lat = input(f"Vnesite zemljepisno širino, kjer bo postavljena SE (ali pritisnite Enter za Ljubljana): ").strip()
-    if vnos_lat == "":
-        lat = 46.0569
-    else:
-        try:
-            lat = float(vnos_lat.replace(',','.'))
-        except ValueError:
-            print("Vaš vnos ni veljaven. Uporabljam privzeto vrednost (Ljubljana).")
-    vnos_lon = input(f"Vnesite zemljepisno dolžino, kjer bo postavljena SE (ali pritisnite Enter za Ljubljana): ").strip()
-    if vnos_lon == "":
-        lon = 14.5058
-    else:
-        try:
-            lon = float(vnos_lon.replace(',','.'))
-        except ValueError:
-            print("Vaš vnos ni veljaven. Uporabljam privzeto vrednost (Ljubljana).")
-    print(f"Izbrana lokacija za SE: širina = {lat:.4f}, dolžina = {lon:.4f}")
-
-    print("=== ZAGON PRENOSA PODATKOV S SPLETA ===")
-    prenesi_spot_cene(leto=2024, drzava="SI")
-    prenesi_proizvodnjo(lat, lon, leto=2020)
-    print("=== PRENOS USPEŠNO ZAKLJUČEN ===")
