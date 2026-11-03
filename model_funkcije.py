@@ -1,9 +1,13 @@
 import numpy as np 
+import re
 
-def ocisti_ceno(tekst): #iz niza v float
+def ocisti_ceno(tekst):
     if isinstance(tekst, str):
-        stevilka_del = tekst.split(' ')[0] #vzame samo prvi del niza
-        return float(stevilka_del.replace(',', '.'))
+        # Poiščemo prvi pojav števila (števke, ki imajo lahko vmes vejico ali piko)
+        ujemanje = re.search(r"\d+(?:[.,]\d+)?", tekst)
+        if ujemanje:
+            # Vzamemo najdeni del, zamenjamo vejico s piko in pretvorimo v float
+            return float(ujemanje.group(0).replace(",", "."))
     return tekst
 
 
